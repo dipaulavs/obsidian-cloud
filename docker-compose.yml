@@ -56,11 +56,6 @@ services:
         # Middleware
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-
-        # Health Check
-        - "traefik.http.services.obsidian.loadbalancer.healthcheck.path=/health"
-        - "traefik.http.services.obsidian.loadbalancer.healthcheck.interval=30s"
-        - "traefik.http.services.obsidian.loadbalancer.healthcheck.timeout=5s"
     logging:
       driver: "json-file"
       options:
