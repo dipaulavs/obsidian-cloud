@@ -51,7 +51,7 @@ services:
         - "traefik.http.routers.obsidian.service=obsidian"
 
         # Service Configuration
-        - "traefik.http.services.obsidian.loadbalancer.server.port=8082"
+        - "traefik.http.services.obsidian.loadbalancer.server.port=3000"
 
         # Middleware
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
