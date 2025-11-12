@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  app:
+    image: lscr.io/linuxserver/obsidian:latest
+    container_name: obsidian
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    volumes:
+      - obsidian-config:/config
+    networks:
+      - loop9Net
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      labels:
+        # Traefik Configuration
+        - "traefik.enable=true"
+        - "traefik.docker.network=loop9Net"
+
+        # HTTP Router (redirect to HTTPS)
+        - "traefik.http.routers.obsidian-http.rule=Host(`obsidian.loop9.com.br`)"
+        - "traefik.http.routers.obsidian-http.entrypoints=web"
+        - "traefik.http.routers.obsidian-http.middlewares=redirect-to-https"
+
+        # HTTPS Router
+        - "traefik.http.routers.obsidian.rule=Host(`obsidian.loop9.com.br`)"
+        - "traefik.http.routers.obsidian.entrypoints=websecure"
+        - "traefik.http.routers.obsidian.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.obsidian.service=obsidian"
+
+        # Service Configuration
+        - "traefik.http.services.obsidian.loadbalancer.server.port=3000"
+
+        # Middleware
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+        # Health Check
+        - "traefik.http.services.obsidian.loadbalancer.healthcheck.path=/health"
+        - "traefik.http.services.obsidian.loadbalancer.healthcheck.interval=30s"
+        - "traefik.http.services.obsidian.loadbalancer.healthcheck.timeout=5s"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  obsidian-config:
+    driver: local
+
+networks:
+  loop9Net:
+    external: true
